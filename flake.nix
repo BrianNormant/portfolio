@@ -11,27 +11,46 @@
 			systems = [ "x86_64-linux" ];
 			perSystem = { pkgs, inputs, ... }: {
 
-				devShells.default = pkgs.mkShell {
+				# Front-End
+				devShells.website = pkgs.mkShell {
 					packages = with pkgs; [ nodejs zsh ];
 					shellHook = ''
 						export SHELL=zsh
 						exec zsh
 					'';
 				};
-
-				# Website and build
-				packages = rec {
-					website = pkgs.buildNpmPackage rec {
-						pname = "portfolio-${version}";
-						version = "dev";
-						src = ./.;
-						npmDepsHash = "sha256-QlTJvdiyS29sWAzJVzVJTHnmS4Y2ZRmVwCJiipyxhQM=";
-						installPhase = ''
-							mkdir -p $out
-							cp -r dist/* $out
-							'';
+				packages.portfolio-website = pkgs.buildNpmPackage rec {
+					pname = "portfolio-${version}";
+					version = "dev";
+					src = ./web;
+					npmDepsHash = "sha256-QlTJvdiyS29sWAzJVzVJTHnmS4Y2ZRmVwCJiipyxhQM=";
+					installPhase = ''
+						mkdir -p $out
+						cp -r dist/* $out
+					'';
+				};
+				
+				# Rest-API
+				# Inspiration from
+				# https://github.com/MatejaMaric/yota-laravel/blob/0ee30435fe94918836360022ddb3e24cfeed384a/derivation.nix
+				devShells.api = pkgs.mkShell {
+					packages = with pkgs; [ php84Packages.composer php84 zsh ];
+					shellHook = ''
+						export SHELL=zsh
+						exec zsh
+					'';
+					php = pkgs.php84.buildEnv {
+						extensions = ( {enabled, all}: enabled);
 					};
-					default = website;
+					composerLock = ./api/composer.lock;
+					# vendorHash = 
+
+				};
+				packages.portfolio-api = pkgs.php84.buildComposerProject {
+					pname = "portfolio-api";
+					version = "dev";
+
+					src = ./api;
 				};
 			};
 		};
