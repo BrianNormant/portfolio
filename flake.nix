@@ -10,12 +10,12 @@
 		flake-parts.lib.mkFlake { inherit inputs; } {
 			systems = [ "x86_64-linux" ];
 			perSystem = { pkgs, inputs, ... }: {
-
 				# Front-End
 				devShells.website = pkgs.mkShell {
 					packages = with pkgs; [ nodejs zsh ];
 					shellHook = ''
 						export SHELL=zsh
+						cd ./web
 						exec zsh
 					'';
 				};
@@ -34,23 +34,37 @@
 				# Inspiration from
 				# https://github.com/MatejaMaric/yota-laravel/blob/0ee30435fe94918836360022ddb3e24cfeed384a/derivation.nix
 				devShells.api = pkgs.mkShell {
-					packages = with pkgs; [ php84Packages.composer php84 zsh ];
+					packages = with pkgs; [ php84Packages.composer php84 zsh nodejs ];
 					shellHook = ''
 						export SHELL=zsh
+						cd ./api
 						exec zsh
 					'';
-					php = pkgs.php84.buildEnv {
-						extensions = ( {enabled, all}: enabled);
-					};
-					composerLock = ./api/composer.lock;
-					# vendorHash = 
 
 				};
-				packages.portfolio-api = pkgs.php84.buildComposerProject {
+				packages.portfolio-api = pkgs.php84.buildComposerProject rec {
 					pname = "portfolio-api";
-					version = "dev";
+					version = "0.0.1";
 
 					src = ./api;
+					composerLock = ./api/composer.lock;
+					vendorHash = "sha256-L/dVhIO6qza4vzaC4pLAlwDsO2kXmYa4mQjxi15qHwU=";
+
+					nativeBuildInputs = with pkgs; [
+						nodejs
+						npmHooks.npmConfigHook
+						npmHooks.npmInstallHook
+					];
+
+					npmDeps = pkgs.fetchNpmDeps {
+						inherit src;
+						hash = "sha256-NJkyTpQTg2NVckHkbeb2X/7vyJSRuJRC0FaJIMVtDaI=";
+					};
+					
+					postInstall = ''
+						mv $out/share/php/portfolio-api/* $out
+						rm -rf $out/share
+					'';
 				};
 			};
 		};
