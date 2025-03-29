@@ -122,10 +122,6 @@
 						ln -s ${dataDir}/.env $out/.env
 
 						chmod +x $out/artisan
-						php artisan key:generate
-						php artisan config:cache
-						php artisan route:cache
-						php artisan view:cache
 					'';
 				};
 			};
@@ -200,10 +196,10 @@
 								ln -sf ${cfg.portfolio-pkgs}/bootstrap-static/app.php ${runtimeDir}/app.php
 
 								cd ${cfg.portfolio-pkgs}
-								# php artisan key:generate
-								# php artisan config:cache
-								# php artisan route:cache
-								# php artisan view:cache
+								php artisan key:generate
+								php artisan config:cache
+								php artisan route:cache
+								php artisan view:cache
 								'';
 						};
 					};
