@@ -86,8 +86,8 @@
 
 				packages.portfolio-api = let
 					# Those folder need to be setup by the module
-					dataDir = "/var/lib/php/portfolio-api";
-					runtimeDir = "/run/php/portfolio-api";
+					dataDir = "/var/lib/portfolio-api";
+					runtimeDir = "/run/portfolio-api";
 				in pkgs.php84.buildComposerProject rec {
 					pname = "portfolio-api";
 					version = "0.0.1";
@@ -130,8 +130,8 @@
 					cfg = config.services.portfolio-api;
 					user = "portfolio";
 					group = "portfolio";
-					dataDir = "/var/lib/php/portfolio-api";
-					runtimeDir = "/run/php/portfolio-api";
+					dataDir = "/var/lib/portfolio-api";
+					runtimeDir = "/run/portfolio-api";
 					phpPackage = pkgs.php.withExtensions ({enabled, all}: enabled);
 				in {
 					options.services.portfolio-api= {
