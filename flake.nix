@@ -102,7 +102,14 @@
 						hash = "sha256-NJkyTpQTg2NVckHkbeb2X/7vyJSRuJRC0FaJIMVtDaI=";
 					};
 
-					postBuild = "npm run prod";
+					preBuild = ''
+						composer dump-autoload --optimize
+						php artisan config:cache
+						php artisan event:cache
+						php artisan route:cache
+						php artisan view:cache
+						php artisan optimize
+					'';
 					
 					postInstall = ''
 						mv $out/share/php/portfolio-api/* $out
