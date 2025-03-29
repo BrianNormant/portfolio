@@ -62,7 +62,7 @@
 				};
 				packages.portfolio-website = pkgs.buildNpmPackage rec {
 					pname = "portfolio-${version}";
-					version = "dev";
+					version = "0.0.1";
 					src = ./web;
 					npmDepsHash = "sha256-QlTJvdiyS29sWAzJVzVJTHnmS4Y2ZRmVwCJiipyxhQM=";
 					installPhase = ''
