@@ -10,6 +10,47 @@
 		flake-parts.lib.mkFlake { inherit inputs; } {
 			systems = [ "x86_64-linux" ];
 			perSystem = { pkgs, inputs, ... }: {
+				# Tmux dev shell
+				devShells.default = pkgs.mkShell {
+					packages = with pkgs; [];
+					shellHook = ''
+						export SHELL=zsh
+						SESSION_NAME=Portfolio
+						DEV_DIR=$(pwd)
+
+						# Check if session exists
+						if tmux has-session -t "$SESSION_NAME" > /dev/null 2>&1; then
+							echo "Tmux $SESSION_NAME session already running."
+							tmux switch-client -t "$SESSION_NAME":1
+							exit 0
+						fi
+
+						# Check if session exists but is detached
+						if tmux list-sessions | grep -q "$SESSION_NAME"; then
+							echo "Tmux $SESSION_NAME session exists, attaching..."
+							tmux attach-session -t "$SESSION_NAME":1
+							exit 0
+						fi
+
+						tmux new-session -d -c "~" -s $SESSION_NAME
+
+						tmux respawn-window -k -t $SESSION_NAME:1 -c $DEV_DIR "nix develop .#web"
+						tmux rename-window -t $SESSION_NAME:1 "Web"
+
+
+						tmux new-window -t $SESSION_NAME:2 -n "Api" -c $DEV_DIR "nix develop .#api"
+
+						tmux new-window -t $SESSION_NAME:3 -n "Server" -c "~/nixos-config"
+						tmux split-window -t $SESSION_NAME:3 "ssh BrianNixServer"
+
+						tmux new-window -t $SESSION_NAME:4 -n "Git" -c $DEV_DIR "gg"
+
+						tmux switch -t $SESSION_NAME:1
+
+						exit 0;
+					'';
+				};
+
 				# Front-End
 				devShells.website = pkgs.mkShell {
 					packages = with pkgs; [ nodejs zsh ];
