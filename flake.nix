@@ -182,49 +182,83 @@
 						];
 
 						# Service
-						systemd.services.portfolio-data-setup = {
-							description = "Setup portfolio data";
-							wantedBy = [ "multi-user.target" ];
-							after = [ "postgresql.service" ];
-							requires = [ "postgresql.service" ];
-							path = [ phpPackage pkgs.rsync ];
+						systemd.services = {
+							portfolio-data-setup = {
+								description = "Setup portfolio data";
+								wantedBy = [ "multi-user.target" ];
+								after = [ "postgresql.service" ];
+								requires = [ "postgresql.service" ];
+								path = [ phpPackage pkgs.rsync ];
 
-							serviceConfig = {
-								Type = "oneshot";
-								User = user;
-								Group = group;
-								StateDirectory = "portfolio-api";
-								Umask = "077";
+								serviceConfig = {
+									Type = "oneshot";
+									User = user;
+									Group = group;
+									StateDirectory = "portfolio-api";
+									Umask = "077";
+								};
+
+								script = ''
+									# Before running any PHP program, cleanup the code cache.
+									# It's necessary if you upgrade the application otherwise you might try to import non-existent modules.
+									rm -f ${runtimeDir}/app.php
+									rm -rf ${runtimeDir}/cache/*
+
+									rm -f ${dataDir}/.env
+									cp --no-preserve=all ${configFile} ${dataDir}/.env
+
+									# Copy the static storage (package provided) to the runtime storage
+									mkdir -p ${dataDir}/storage
+									rsync -av --no-perms ${cfg.portfolio-pkgs}/storage-static/ ${dataDir}/storage
+									chmod -R +w ${dataDir}/storage
+
+									chmod g+x ${dataDir}/storage ${dataDir}/storage/app
+									chmod -R g+rX ${dataDir}/storage/app/public
+
+									# Link the app.php in the runtime folder.
+									# We cannot link the cache folder only because bootstrap folder needs to be writeable.
+									ln -sf ${cfg.portfolio-pkgs}/bootstrap-static/app.php ${runtimeDir}/app.php
+
+									cd ${cfg.portfolio-pkgs}
+									php artisan key:generate
+									php artisan config:cache
+									php artisan route:cache
+									php artisan view:cache
+									'';
 							};
-
-							script = ''
-								# Before running any PHP program, cleanup the code cache.
-								# It's necessary if you upgrade the application otherwise you might try to import non-existent modules.
-								rm -f ${runtimeDir}/app.php
-								rm -rf ${runtimeDir}/cache/*
-
-								rm -f ${dataDir}/.env
-								cp --no-preserve=all ${configFile} ${dataDir}/.env
-
-								# Copy the static storage (package provided) to the runtime storage
-								mkdir -p ${dataDir}/storage
-								rsync -av --no-perms ${cfg.portfolio-pkgs}/storage-static/ ${dataDir}/storage
-								chmod -R +w ${dataDir}/storage
-
-								chmod g+x ${dataDir}/storage ${dataDir}/storage/app
-								chmod -R g+rX ${dataDir}/storage/app/public
-
-								# Link the app.php in the runtime folder.
-								# We cannot link the cache folder only because bootstrap folder needs to be writeable.
-								ln -sf ${cfg.portfolio-pkgs}/bootstrap-static/app.php ${runtimeDir}/app.php
-
-								cd ${cfg.portfolio-pkgs}
-								php artisan key:generate
-								php artisan config:cache
-								php artisan route:cache
-								php artisan view:cache
-								php artisan migrate
-								'';
+							portfolio-migrade-db = {
+								path = [ phpPackage ];
+								script = "php artisan migrate";
+								serviceConfig = {
+									Type = "oneshot";
+									User = user;
+									Group = group;
+									StateDirectory = "portfolio-api";
+									Umask = "077";
+								};
+							};
+							portfolio-migrade-db-FORCE = {
+								path = [ phpPackage ];
+								script = "php artisan migrate --force";
+								serviceConfig = {
+									Type = "oneshot";
+									User = user;
+									Group = group;
+									StateDirectory = "portfolio-api";
+									Umask = "077";
+								};
+							};
+							portfolio-rollback-db = {
+								path = [ phpPackage ];
+								script = "php artisan migrate:rollback";
+								serviceConfig = {
+									Type = "oneshot";
+									User = user;
+									Group = group;
+									StateDirectory = "portfolio-api";
+									Umask = "077";
+								};
+							};
 						};
 					};
 				};
