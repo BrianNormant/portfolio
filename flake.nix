@@ -103,7 +103,7 @@
 					};
 
 					preBuild = ''
-						composer dump-autoload --optimize
+						# composer dump-autoload --optimize
 						php artisan config:cache
 						php artisan event:cache
 						php artisan route:cache
