@@ -134,12 +134,31 @@
 					dataDir = "/var/lib/portfolio-api";
 					runtimeDir = "/run/portfolio-api";
 					phpPackage = pkgs.php.withExtensions ({enabled, all}: enabled);
+					configFile = pkgs.writeText "portfolio-api-env" (lib.generators.toKeyValue { } {
+						APP_KEY = "";
+						APP_ENV = if cfg.debug then "local" else "production";
+						APP_DEBUG = cfg.debug;
+						APP_URL = "https://${cfg.domain}";
+						APP_DOMAIN = cfg.domain;
+						LOG_CHANNEL = "stderr";
+						DB_CONNECTION = "pgsql";
+						DB_DATABASE = user;
+						DB_USERNAME = user;
+						DB_PASSWORD = "1234";
+					});
 				in {
 					options.services.portfolio-api= {
 						enable = lib.mkEnableOption "Enable portfolio-api";
 						portfolio-pkgs = lib.mkOption {
 							type = lib.types.package;
 							description = "the api package to use";
+						};
+						debug = lib.mkOption {
+							type = lib.types.bool;
+							default = false;
+						};
+						domain = lib.mkOption {
+							type = lib.types.str;
 						};
 					};
 					config = lib.mkIf cfg.enable {
@@ -183,6 +202,9 @@
 								# It's necessary if you upgrade the application otherwise you might try to import non-existent modules.
 								rm -f ${runtimeDir}/app.php
 								rm -rf ${runtimeDir}/cache/*
+
+								rm -f ${dataDir}/.env
+								cp --no-preserve=all ${configFile} ${dataDir}/.env
 
 								# Copy the static storage (package provided) to the runtime storage
 								mkdir -p ${dataDir}/storage
