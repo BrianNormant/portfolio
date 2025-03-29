@@ -1,6 +1,7 @@
 <script lang="ts">
   import Entry from './lib/Entry.svelte'
   let ids: number[] = []; // Array to store the IDs from the API
+  let id :number = 0; // Placeholder
   let loading :boolean = true;
   let error: string | null = null;
 
@@ -33,9 +34,9 @@
 
 <main>
   <h1>My Portfolio</h1>
-  <div class="card">
+  <section>
     <Entry {id}/>
-  </div>
+  </section>
 </main>
 
 <style>
