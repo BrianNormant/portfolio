@@ -83,7 +83,12 @@
 					'';
 
 				};
-				packages.portfolio-api = pkgs.php84.buildComposerProject rec {
+
+				packages.portfolio-api = let
+					# Those folder need to be setup by the module
+					dataDir = "/var/lib/php/portfolio-api";
+					runtimeDir = "/run/php/portfolio-api";
+				in pkgs.php84.buildComposerProject rec {
 					pname = "portfolio-api";
 					version = "0.0.1";
 
@@ -102,19 +107,101 @@
 						hash = "sha256-NJkyTpQTg2NVckHkbeb2X/7vyJSRuJRC0FaJIMVtDaI=";
 					};
 
-					preBuild = ''
-						# composer dump-autoload --optimize
-						# php artisan config:cache
-						# php artisan event:cache
-						# php artisan route:cache
-						# php artisan view:cache
-						# php artisan optimize
-					'';
-					
 					postInstall = ''
 						mv $out/share/php/portfolio-api/* $out
 						rm -rf $out/share
+
+						rm -R $out/bootstrap/cache
+
+						mv $out/bootstrap $out/bootstrap-static
+						mv $out/storage $out/storage-static
+
+						ln -s ${dataDir}/storage $out/storage
+						ln -s ${dataDir}/storage/app/public $out/public/storage
+						ln -s ${runtimeDir} $out/bootstrap
+
+						chmod +x $out/artisan
 					'';
+				};
+			};
+			flake = {
+				nixosModules.portfolio-api = {lib, pkgs, config, ...}:
+				let
+					cfg = config.services.portfolio-api;
+					user = "portfolio";
+					group = "portfolio";
+					dataDir = "/var/lib/php/portfolio-api";
+					runtimeDir = "/run/php/portfolio-api";
+					phpPackage = pkgs.php.withExtensions ({enabled, all}: enabled);
+				in {
+					options.services.portfolio-api= {
+						enable = lib.mkEnableOption "Enable portfolio-api";
+						portfolio-pkgs = lib.mkOption {
+							type = lib.types.package;
+							description = "the api package to use";
+						};
+					};
+					config = lib.mkIf cfg.enable {
+						users.users = {
+							${user} = {
+								isSystemUser = true;
+								inherit group;
+							};
+							# Needed for Nginx to access phpfpm socket
+							${config.services.nginx.user} = {
+								extraGroups = [ group ];
+							};
+						};
+						users.groups.${group} = {};
+						
+						# Cache
+						systemd.tmpfiles.rules = [
+							"d ${runtimeDir}/        0700 ${user} ${group} - -"
+							"d ${runtimeDir}/cache   0700 ${user} ${group} - -"
+						];
+
+						# Service
+						systemd.services.portfolio-data-setup = {
+							description = "Setup portfolio data";
+							wantedBy = [ "multi-user.target" ];
+							after = [ "postgresql.service" ];
+							requires = [ "postgresql.service" ];
+							path = [ phpPackage pkgs.rsync ];
+
+							serviceConfig = {
+								Type = "oneshot";
+								User = user;
+								Group = group;
+								StateDirectory = "portfolio-api";
+								Umask = "077";
+							};
+
+							script = ''
+								# Before running any PHP program, cleanup the code cache.
+								# It's necessary if you upgrade the application otherwise you might try to import non-existent modules.
+								rm -f ${runtimeDir}/app.php
+								rm -rf ${runtimeDir}/cache/*
+
+								# Copy the static storage (package provided) to the runtime storage
+								mkdir -p ${dataDir}/storage
+								rsync -av --no-perms ${cfg.portfolio-pkgs}/storage-static/ ${dataDir}/storage
+								chmod -R +w ${dataDir}/storage
+
+								chmod g+x ${dataDir}/storage ${dataDir}/storage/app
+								chmod -R g+rX ${dataDir}/storage/app/public
+
+								# Link the app.php in the runtime folder.
+								# We cannot link the cache folder only because bootstrap folder needs to be writeable.
+								ln -sf ${cfg.portfolio-pkgs}/bootstrap-static/app.php ${runtimeDir}/app.php
+
+								cd ${cfg.portfolio-pkgs}
+								php artisan key:generate
+								php artisan config:cache
+								php artisan route:cache
+								php artisan view:cache
+								'';
+						};
+					};
 				};
 			};
 		};
