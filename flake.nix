@@ -52,7 +52,7 @@
 				};
 
 				# Front-End
-				devShells.website = pkgs.mkShell {
+				devShells.web= pkgs.mkShell {
 					packages = with pkgs; [ nodejs zsh ];
 					shellHook = ''
 						export SHELL=zsh
@@ -101,6 +101,8 @@
 						inherit src;
 						hash = "sha256-NJkyTpQTg2NVckHkbeb2X/7vyJSRuJRC0FaJIMVtDaI=";
 					};
+
+					postBuild = "npm run prod";
 					
 					postInstall = ''
 						mv $out/share/php/portfolio-api/* $out
