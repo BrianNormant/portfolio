@@ -122,6 +122,10 @@
 						ln -s ${dataDir}/.env $out/.env
 
 						chmod +x $out/artisan
+						php artisan key:generate
+						php artisan config:cache
+						php artisan route:cache
+						php artisan view:cache
 					'';
 				};
 			};
