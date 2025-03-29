@@ -223,7 +223,7 @@
 								php artisan config:cache
 								php artisan route:cache
 								php artisan view:cache
-								php artisan make:migration create_flights_table
+								php artisan migrate
 								'';
 						};
 					};
