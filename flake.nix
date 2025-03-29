@@ -157,9 +157,9 @@
 						
 						# Cache
 						systemd.tmpfiles.rules = [
-							"d ${runtimeDir}/        0666 ${user} ${group} - -"
-							"d ${runtimeDir}/cache   0666 ${user} ${group} - -"
-							"d ${dataDir}/           0666 ${user} ${group} - -"
+							"d ${runtimeDir}/        0775 ${user} ${group} - -"
+							"d ${runtimeDir}/cache   0775 ${user} ${group} - -"
+							"d ${dataDir}/           0775 ${user} ${group} - -"
 						];
 
 						# Service
