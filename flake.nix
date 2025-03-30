@@ -182,7 +182,7 @@
 							name = "portfolio-management-shell";
 							runtimeInputs = with pkgs; [ phpPackage zsh ];
 							text = ''
-								cd ${cfg.services.portfolio-api.portfolio-pkgs}
+								cd ${cfg.portfolio-pkgs}
 								zsh
 							'';
 							})
