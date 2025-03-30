@@ -43,7 +43,7 @@
 						tmux new-window -t $SESSION_NAME:3 -n "Server" -c "~/nixos-config"
 						tmux split-window -t $SESSION_NAME:3 "ssh BrianNixServer"
 
-						tmux new-window -t $SESSION_NAME:4 -n "Git" -c $DEV_DIR "gg"
+						tmux new-window -t $SESSION_NAME:4 -n "flake" -c $DEV_DIR "lazygit"
 
 						tmux switch -t $SESSION_NAME:1
 
@@ -94,7 +94,7 @@
 
 					src = ./api;
 					composerLock = ./api/composer.lock;
-					vendorHash = "sha256-L/dVhIO6qza4vzaC4pLAlwDsO2kXmYa4mQjxi15qHwU=";
+					vendorHash = "sha256-sDmWBR6hHlzmBNQj3dmGCt9v7StydiI46O695dzm4IE=";
 
 					nativeBuildInputs = with pkgs; [
 						nodejs
