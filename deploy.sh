@@ -10,5 +10,5 @@ APP_FLAKE=portfolio
 OLD_PWD=$PWD
 cd $SERVER_CONFIG_DIR
 nix flake update $APP_FLAKE
-nixos-rebuild $SERVER_ACTION $SERVER_FLAKE --target-host $SERVER_SSH
+nixos-rebuild $SERVER_ACTION ${=SERVER_FLAKE} --target-host $SERVER_SSH
 cd $OLD_PWD
