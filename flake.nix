@@ -147,19 +147,35 @@
 						DB_PASSWORD = "1234";
 					});
 				in {
-					options.services.portfolio-api= {
-						enable = lib.mkEnableOption "Enable portfolio-api";
-						portfolio-pkgs = lib.mkOption {
-							type = lib.types.package;
-							description = "the api package to use";
+					
+					options = {
+						services.portfolio-api= {
+							enable = lib.mkEnableOption "Enable portfolio-api";
+							portfolio-pkgs = lib.mkOption {
+								type = lib.types.package;
+								description = "the api package to use";
+							};
+							debug = lib.mkOption {
+								type = lib.types.bool;
+								default = false;
+							};
+							domain = lib.mkOption {
+								type = lib.types.str;
+							};
 						};
-						debug = lib.mkOption {
-							type = lib.types.bool;
-							default = false;
-						};
-						domain = lib.mkOption {
-							type = lib.types.str;
-						};
+						environment.systemPackages = [
+							# Shell to manage the api
+							# This is for to run migrations, inspect the database status, ect
+							(pkgs.writeShellApplication {
+							name = "portfolio-management-shell";
+							runtimeInputs = with pkgs; [ phpPackage zsh ];
+
+							text = ''
+								cd ${pkgs.cfg.services.portfolio-api.portfolio-pkgs}
+								zsh
+							'';
+							})
+						];
 					};
 					config = lib.mkIf cfg.enable {
 						users.users = {
