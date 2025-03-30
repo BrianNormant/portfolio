@@ -148,34 +148,19 @@
 					});
 				in {
 					
-					options = {
-						services.portfolio-api= {
-							enable = lib.mkEnableOption "Enable portfolio-api";
-							portfolio-pkgs = lib.mkOption {
-								type = lib.types.package;
-								description = "the api package to use";
-							};
-							debug = lib.mkOption {
-								type = lib.types.bool;
-								default = false;
-							};
-							domain = lib.mkOption {
-								type = lib.types.str;
-							};
+					options.services.portfolio-api= {
+						enable = lib.mkEnableOption "Enable portfolio-api";
+						portfolio-pkgs = lib.mkOption {
+							type = lib.types.package;
+							description = "the api package to use";
 						};
-						environment.systemPackages = [
-							# Shell to manage the api
-							# This is for to run migrations, inspect the database status, ect
-							(pkgs.writeShellApplication {
-							name = "portfolio-management-shell";
-							runtimeInputs = with pkgs; [ phpPackage zsh ];
-
-							text = ''
-								cd ${pkgs.cfg.services.portfolio-api.portfolio-pkgs}
-								zsh
-							'';
-							})
-						];
+						debug = lib.mkOption {
+							type = lib.types.bool;
+							default = false;
+						};
+						domain = lib.mkOption {
+							type = lib.types.str;
+						};
 					};
 					config = lib.mkIf cfg.enable {
 						users.users = {
@@ -189,6 +174,20 @@
 							};
 						};
 						users.groups.${group} = {};
+
+						environment.systemPackages = [
+							# Shell to manage the api
+							# This is for to run migrations, inspect the database status, ect
+							(pkgs.writeShellApplication {
+							name = "portfolio-management-shell";
+							runtimeInputs = with pkgs; [ phpPackage zsh ];
+							text = ''
+								cd ${pkgs.cfg.services.portfolio-api.portfolio-pkgs}
+								zsh
+							'';
+							})
+						];
+
 						
 						# Cache
 						systemd.tmpfiles.rules = [
