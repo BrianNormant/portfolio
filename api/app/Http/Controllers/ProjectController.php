@@ -33,7 +33,7 @@ class ProjectController extends Controller
      */
     public function show(string $id): JsonResponse
     {
-        $project = Project::where($id)->first();
+        $project = Project::find($id);
         if ($project) {
             return response()->json($project);
         } else {
