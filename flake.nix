@@ -248,7 +248,7 @@
 									Type = "oneshot";
 									User = user;
 									Group = group;
-									StateDirectory = "portfolio-api";
+									WorkingDirectory = cfg.portfolio-pkgs;
 									Umask = "077";
 								};
 							};
@@ -259,7 +259,7 @@
 									Type = "oneshot";
 									User = user;
 									Group = group;
-									StateDirectory = "portfolio-api";
+									WorkingDirectory = cfg.portfolio-pkgs;
 									Umask = "077";
 								};
 							};
@@ -270,7 +270,7 @@
 									Type = "oneshot";
 									User = user;
 									Group = group;
-									StateDirectory = "portfolio-api";
+									WorkingDirectory = cfg.portfolio-pkgs;
 									Umask = "077";
 								};
 							};
